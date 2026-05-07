@@ -1,0 +1,140 @@
+models:
+    - name: silver_airports
+      description: This table contains information about airports, including their identifiers, names, types, locations, and other relevant details.
+      columns:
+        - name: airport_ident
+          description: '{{ doc("silver_airports__airport_ident") }}'
+          data_tests:
+            - not_null
+            - unique
+        - name: airport_name
+          description: Name of the airport, e.g. "Los Angeles International Airport"
+          data_tests:
+            - not_null
+        - name: airport_type
+          description: Type of the airport, e.g. "small_airport"
+          data_tests:
+            - not_null
+            - accepted_values:
+                arguments:
+                  values: ['small_airport', 'medium_airport', 'large_airport', 'seaplane_base', 'heliport', 'balloonport', 'closed']
+        - name: continent
+          description: Continent where the airport is located, e.g. "NA"
+          data_tests:
+            - not_null
+            - accepted_values:
+                arguments:
+                  values: ['NA', 'SA', 'EU', 'AF', 'AS', 'OC', 'AN']
+        - name: airport_lat
+          description: Latitude of the airport, e.g. 33.9425
+          data_tests:
+            - not_null
+            - dbt_expectations.expect_column_values_to_be_between:
+                arguments:
+                  min_value: -90
+                  max_value: 90
+        - name: airport_long
+          description: Longitude of the airport, e.g. -118.4081
+          data_tests:
+            - not_null
+            - dbt_expectations.expect_column_values_to_be_between:
+                arguments:
+                  min_value: -180
+                  max_value: 180
+        - name: iso_country
+          description: ISO country code where the airport is located, e.g. "US"
+          data_tests:
+            - not_null
+            - dbt_expectations.expect_column_values_to_match_regex:
+                arguments:
+                  regex: "^[A-Z]{2}$"
+        - name: iso_region
+          description: ISO region code where the airport is located, e.g. "US-CA"
+          data_tests:
+            - not_null
+    - name: silver_runways
+      description: This table contains information about runways at the airports, including their identifiers, dimensions, surface types, and other relevant details.
+      columns:
+        - name: runway_id
+          description: Unique identifier for the runway.
+          data_tests:
+            - not_null
+            - unique
+        - name: airport_ident
+          description: Airport identifier that references silver_airports.airport_ident
+          data_tests:
+            - not_null
+            - relationships:
+                arguments:
+                  to: ref('silver_airports')
+                  field: airport_ident
+                config:
+                  severity: warn
+        - name: runway_length_ft
+          description: Length of the runway in feet.
+          data_tests:
+            - max_null_pct:
+                config:
+                  severity: error
+                  warn_if: "> 0"
+                  error_if: "> 500"
+        - name: runway_width_ft
+          description: Width of the runway in feet.
+          data_tests:
+            - max_null_pct:
+                config:
+                  severity: error
+                  warn_if: "> 0"
+                  error_if: "> 700"
+        - name: runway_surface
+          description: Surface type of the runway, e.g. "Asphalt"
+          data_tests:
+            - not_null
+        - name: runway_lighted
+          description: Whether the runway is lighted (1) or not (0)
+          data_tests:
+            - not_null
+            - accepted_values:
+                arguments:
+                  values: [0, 1]
+        - name: runway_closed
+          description: Whether the runway is closed (1) or not (0)
+          data_tests:
+            - not_null
+            - accepted_values:
+                arguments:
+                  values: [0, 1]
+    - name: silver_airport_comments
+      description: This table contains comments left by members about the airports, including the comment text, timestamp, and member information.
+      columns:
+        - name: comment_id
+          description: Unique identifier for the comment, e.g. "12345"
+          data_tests:
+            - not_null
+            - unique
+        - name: airport_ident
+          description: Airport identifier that references silver_airports.airport_ident
+          data_tests:
+            - not_null
+            - relationships:
+                arguments:
+                  to: ref('silver_airports')
+                  field: airport_ident
+                config:
+                  severity: warn
+        - name: comment_timestamp
+          description: Timestamp of when the comment was created
+          data_tests:
+            - not_null
+        - name: comment_body
+          description: The body of the comment left by a member about the airport
+          data_tests:
+            - not_null
+        - name: member_nickname
+          description: The nickname of the member who left the comment
+        - name: comment_subject
+          description: The subject of the comment left by a member about the airport
+        - name: loaded_at
+          description: Timestamp of when the comment was loaded into the silver_airport_comments table
+          data_tests:
+            - not_null

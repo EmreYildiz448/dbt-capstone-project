@@ -1,0 +1,16 @@
+airstats:
+  outputs:
+    dev:
+      type: snowflake
+      account: "PLACEHOLDER_FOR_ACCOUNT"
+      user: dbt
+
+      role: TRANSFORM
+      private_key: "PLACEHOLDER_FOR_PRIVATE_KEY"
+      private_key_passphrase: "PLACEHOLDER_FOR_PASSPHRASE"
+
+      database: AIRSTATS
+      schema: DEV
+      threads: 1
+      warehouse: COMPUTE_WH
+  target: dev
